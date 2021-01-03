@@ -1,0 +1,115 @@
+#:kivy 1.11.1
+
+
+
+ScreenManager:
+    id: screen_manager
+    MenuScreen:
+        id: menu_screen
+        name: 'menu'
+        manager: screen_manager
+    SelectionScreen:
+        id: selection_screen
+        name: 'selection'
+        manager: screen_manager
+        label_text: menu_screen.text
+        my_lectures: menu_screen.languages
+        on_enter: self.enter_selection()
+    SessionScreen:
+        id: session_screen
+        name: 'session'
+        manager: screen_manager
+        session: selection_screen.session
+        direction: selection_screen.direction
+        on_enter: self.enter_session()
+
+
+<MenuScreen>:
+    BoxLayout:
+        id: mainpage
+        orientation: 'vertical'
+        LanguageSpinner:
+            id: mylanguages
+            values: root.languages.keys()
+            on_text: root.text = self.text
+        Button:
+            text: 'Lecture Selection'
+            on_release: root.manager.current = 'selection'
+        Button:
+            text: 'Print Languages'
+            on_release: print(root.languages)
+
+<SelectionScreen>:
+    lecture_rv: lecture_rv
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.label_text
+            size_hint: (1, 0.2)
+        BoxLayout:
+            RV:
+                id: lecture_rv
+            BoxLayout:
+                orientation: 'vertical'
+                Button:
+                    text: 'Foreign -> Native'
+                    on_release:
+                        root.direction = root.Direction(1, 0)
+                        root.create_session()
+                        root.manager.current = 'session'
+                Button:
+                    text: 'Native -> Foreign'
+                    on_release:
+                        root.direction = root.Direction(0, 1)
+                        root.create_session()
+                        root.manager.current = 'session'
+                Button:
+                    text: 'Back'
+                    on_release: root.manager.current = 'menu'
+
+<SessionScreen>:
+    sessionbox: sessionbox
+    SessionBoxLayout:
+        id: sessionbox
+        orientation: 'vertical'
+        answer_text: answer_text
+        Label:
+            text: root.question
+        SessionTextInput:
+            id: answer_text
+            hint_text: 'Get started.'
+            multiline: False
+            on_text_validate: root.next_word()
+            on_focus: self.text = ""
+        Button:
+            text: 'Submit'
+            on_release: root.next_word()
+        Button:
+            text: "Start"
+            on_release: root.get_started()
+        Button:
+            text: "Rerun"
+            on_release: root.rerun()
+
+<SelectableLabel>:
+    canvas.before:
+        Color:
+            rgba: (.0, 0.9, .1, .3) if self.selected else (0, 0, 0, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<RV>:
+    viewclass: 'SelectableLabel'
+    selectbox: selectbox
+    SelectableRecycleBoxLayout:
+        id: selectbox
+        default_size: None, dp(56)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+        orientation: 'vertical'
+        multiselect: True
+        touch_multiselect: True
+
+
